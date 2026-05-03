@@ -1,0 +1,254 @@
+🟣 Void UI Library – Dokumentation
+Void ist eine moderne, anpassbare UI-Bibliothek für Roblox-Executor-Skripte. Sie bietet eine einfache, aber mächtige Oberfläche mit vielen Elementen, Themes, Konfigurationsspeicherung und mehr.
+
+📦 Installation
+Lade die Library mit einem einzigen loadstring:
+
+lua
+local Void = loadstring(game:HttpGet("https://raw.githubusercontent.com/Venty5/VentyUi/refs/heads/main/.lua"))()
+🚀 Erste Schritte – Ein einfaches Fenster
+lua
+local Window = Void:MakeWindow({
+    Name = "Mein Script",
+    HidePremium = true,
+    SaveConfig = true,
+    ConfigFolder = "MeinOrdner",
+    IntroEnabled = true,
+    IntroText = "Lade...",
+    IntroIcon = "rbxassetid://7741678120",
+    Theme = "Dark"
+})
+
+local MainTab = Window:MakeTab({
+    Name = "Haupt",
+    Icon = "rbxassetid://4483345998"
+})
+
+-- Hier fügst du Elemente hinzu (siehe unten)
+
+Void:Init()
+🔧 Fenster-Optionen
+Parameter	Typ	Beschreibung
+Name	string	Titel des Fensters
+HidePremium	bool	Blendet Premium-Badge aus
+SaveConfig	bool	Aktiviert automatisches Speichern der Einstellungen
+ConfigFolder	string	Ordner, in dem die Konfiguration gespeichert wird
+IntroEnabled	bool	Zeigt eine Einleitungsanimation
+IntroText	string	Text in der Intro-Animation
+IntroIcon	string	Bild-URL für die Intro-Animation
+Theme	string	"Dark", "Light", "Midnight", "Crimson", "Forest"
+🧩 Elemente im Tab
+➕ Button
+lua
+Tab:AddButton({
+    Name = "Klick mich!",
+    Callback = function()
+        print("Button gedrückt")
+    end
+})
+🔘 Toggle (Ein-/Aus-Schalter)
+lua
+local meinToggle = Tab:AddToggle({
+    Name = "ESP aktivieren",
+    Default = false,
+    Callback = function(state)
+        print(state and "AN" or "AUS")
+    end
+})
+
+-- Wert später ändern:
+meinToggle:Set(true)
+🎚️ Slider
+lua
+local slider = Tab:AddSlider({
+    Name = "Geschwindigkeit",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Increment = 5,
+    ValueName = "%",
+    Callback = function(value)
+        print(value)
+    end
+})
+
+-- Wert setzen:
+slider:Set(75)
+📝 Textbox
+lua
+Tab:AddTextbox({
+    Name = "Nachricht",
+    Default = "Hallo",
+    TextDisappear = true,
+    Callback = function(text)
+        print(text)
+    end
+})
+🏷️ Label (nur Text)
+lua
+local label = Tab:AddLabel("Status: Bereit")
+-- Ändern:
+label:Set("Neuer Status")
+📄 Paragraph (Titel + Inhalt)
+lua
+local para = Tab:AddParagraph("Überschrift", "Beschreibungstext")
+-- Ändern:
+para:Set("Neue Überschrift", "Neuer Inhalt")
+⌨️ Keybind (Tastenbelegung)
+lua
+local bind = Tab:AddBind({
+    Name = "Teleport",
+    Default = Enum.KeyCode.T,
+    Hold = false,   -- true = solange gedrückt
+    Callback = function(holding)
+        print("Taste gedrückt")
+    end
+})
+
+-- Tastenbelegung ändern:
+bind:Set(Enum.KeyCode.Y)
+📋 Dropdown (Auswahlliste)
+lua
+local dropdown = Tab:AddDropdown({
+    Name = "Waffe",
+    Options = {"Pistole", "Shotgun", "Sniper"},
+    Default = "Pistole",
+    Callback = function(option)
+        print(option)
+    end
+})
+
+-- Optionen später neu laden:
+dropdown:Refresh({"Schwert", "Bogen"}, true)
+🎨 Colorpicker (Farbauswahl)
+lua
+local farbe = Tab:AddColorpicker({
+    Name = "Teamfarbe",
+    Default = Color3.fromRGB(255,0,0),
+    Callback = function(color)
+        print(color)
+    end
+})
+
+-- Farbe setzen:
+farbe:Set(Color3.fromRGB(0,255,0))
+📊 ProgressBar
+lua
+local pb = Tab:AddProgressBar("Ladebalken", 0.5)
+-- Wert setzen (0..1):
+pb:Set(0.75, "Fast fertig")
+🧩 Separator (Trennlinie)
+lua
+Tab:AddSeparator()                    -- einfache Linie
+Tab:AddSeparator("ORION")             -- Linie mit Text
+📌 Section (Abschnitt)
+lua
+local sec = Tab:AddSection("Meine Gruppe")
+-- dann Elemente in diese Section einfügen:
+sec:AddButton({Name = "Gruppenbutton"})
+🔢 Stepper (numerischer Schrittgeber)
+lua
+Tab:AddStepper({
+    Name = "Schwierigkeit",
+    Options = {"Leicht", "Mittel", "Schwer"},
+    Default = "Mittel",
+    Callback = function(val) print(val) end
+})
+💬 Benachrichtigungen
+lua
+Void:Notify({
+    Name = "Erfolg",
+    Content = "Das Skript wurde geladen",
+    Image = "rbxassetid://4483345998",
+    Time = 3
+})
+Oder kurz:
+
+lua
+Void:Notify("Hallo Welt", 2)
+💾 Konfiguration speichern & Flags
+Damit Einstellungen automatisch gespeichert und geladen werden, musst du beim Fenster SaveConfig = true und ConfigFolder setzen. Zusätzlich gibst du jedem speicherbaren Element die Parameter Flag und Save:
+
+lua
+local toggle = Tab:AddToggle({
+    Name = "ESP",
+    Default = true,
+    Save = true,
+    Flag = "espToggle"
+})
+
+-- Wert später aus Flags auslesen:
+local aktuellerWert = Void.Flags["espToggle"].Value
+Unterstützte Elemente für Flags: Toggle, Slider, Dropdown, Bind, Colorpicker
+
+🎨 Themes & Design
+Theme wechseln
+lua
+Window:SetTheme("Midnight")
+Verfügbare Themes: "Dark", "Light", "Midnight", "Crimson", "Forest"
+
+Akzentfarbe ändern
+lua
+Window:SetAccentColor(Color3.fromRGB(100,200,50))
+Fenstertitel ändern
+lua
+Window:SetTitle("Neuer Titel")
+🔒 Fenster sperren / entsperren
+lua
+Window:Lock("Lade Konfiguration...")   -- Sperrt die UI
+Window:Unlock()                        -- Entsperrt
+🪟 Minimieren, Schließen, Wiederherstellen
+lua
+-- Das Fenster kann über die Buttons minimiert und geschlossen werden.
+-- Du kannst einen Callback beim Schließen setzen:
+Void:MakeWindow({
+    ...
+    CloseCallback = function()
+        print("Fenster wurde geschlossen")
+    end
+})
+🧹 Aufräumen
+lua
+Void:Destroy()
+Zerstört die gesamte UI und alle zugehörigen Elemente.
+
+📚 Vollständiges Beispiel
+lua
+local Void = loadstring(game:HttpGet("https://raw.githubusercontent.com/Venty5/VentyUi/refs/heads/main/.lua"))()
+
+local Window = Void:MakeWindow({
+    Name = "Beispiel",
+    SaveConfig = true,
+    ConfigFolder = "BeispielConfig"
+})
+
+local Main = Window:MakeTab({Name = "Main"})
+
+local myToggle = Main:AddToggle({
+    Name = "Feature",
+    Default = false,
+    Save = true,
+    Flag = "feature1",
+    Callback = function(v) print(v) end
+})
+
+local mySlider = Main:AddSlider({
+    Name = "Wert",
+    Min = 0,
+    Max = 100,
+    Default = 50,
+    Save = true,
+    Flag = "slider1",
+    Callback = function(v) print(v) end
+})
+
+Void:Init()
+❗ Wichtige Hinweise
+Void:Init() muss am Ende deines Skripts aufgerufen werden.
+
+Die Library speichert Konfigurationen automatisch im Ordner workspace (wenn SaveConfig aktiviert).
+
+Flags müssen eindeutig sein.
+
+Alle UI‑Elemente können auch innerhalb einer Section erstellt werden (gleiche Syntax).
+

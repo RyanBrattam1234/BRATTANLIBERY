@@ -1,1 +1,408 @@
+# Void Menu — Dokumentation
+
+Diese Dokumentation basiert auf dem tatsächlichen Quellcode der Library (ein modifizierter Fork von Orion Lib) und beschreibt alle Funktionen, inklusive der Erweiterungen, die im Original-Orion nicht existieren.
+
+---
+
+## Inhaltsverzeichnis
+
+1. [Fenster erstellen](#fenster-erstellen)
+2. [Tabs erstellen](#tabs-erstellen)
+3. [Tab-Sections (Trenner)](#tab-sections-trenner)
+4. [Tab-Groups (klappbare Gruppen)](#tab-groups-klappbare-gruppen)
+5. [Sections innerhalb eines Tabs](#sections-innerhalb-eines-tabs)
+6. [Benachrichtigungen](#benachrichtigungen)
+7. [Elemente](#elemente)
+   - [Label](#label)
+   - [Paragraph](#paragraph)
+   - [Button](#button)
+   - [Toggle](#toggle)
+   - [Slider](#slider)
+   - [Dropdown](#dropdown)
+   - [Bind (Keybind)](#bind-keybind)
+   - [Textbox](#textbox)
+   - [Colorpicker](#colorpicker)
+8. [Description / Tooltips](#description--tooltips)
+9. [Flags & Config-System](#flags--config-system)
+10. [Theme-System](#theme-system)
+11. [Schriftarten (Fonts)](#schriftarten-fonts)
+12. [Tabs per Drag & Drop verschieben](#tabs-per-drag--drop-verschieben)
+13. [UI-Steuerung (Minimieren / Schließen / Mobile)](#ui-steuerung-minimieren--schließen--mobile)
+14. [Unterschiede zur originalen Orion-Doku](#unterschiede-zur-originalen-orion-doku)
+
+---
+
+## Fenster erstellen
+
+```lua
+local Window = Library:MakeWindow({
+    Name          = "Void Menu",
+    HidePremium   = false,
+    SaveConfig    = true,
+    ConfigFile    = "MeineConfig.json",
+    IntroEnabled  = true,
+    IntroText     = "Launching Void Menu...",
+    IntroIcon     = "rbxassetid://123912257208121",
+    IntroToggleIcon = "rbxassetid://123912257208121",
+    ShowIcon      = false,
+    Icon          = "rbxassetid://123912257208121",
+    CloseCallback = function() end,
+})
+```
+
+| Feld | Typ | Standard | Beschreibung |
+|---|---|---|---|
+| `Name` | string | `"Void Menu"` | Titel des Fensters (oben links, groß) |
+| `HidePremium` | bool | `false` | Blendet den "No Vip"-Text unter dem Profilbild aus |
+| `SaveConfig` | bool | `false` | Aktiviert das automatische Laden/Speichern der Config |
+| `ConfigFile` | string | `Name .. ".json"` | Dateiname der Config (⚠️ **kein Ordner** wie bei Orion, sondern direkt ein Dateiname) |
+| `IntroEnabled` | bool | `true` | Zeigt beim Start eine Lade-Animation mit Fortschrittsbalken (0–100 %) |
+| `IntroText` | string | `"Launching Void Menu..."` | Text während der Intro-Animation |
+| `IntroIcon` | string | Standard-Icon | Icon während der Intro-Animation |
+| `IntroToggleIcon` | string | Standard-Icon | Icon des mobilen "Wieder öffnen"-Buttons |
+| `ShowIcon` / `Icon` | bool / string | `false` / Standard-Icon | (aktuell ungenutzt in der Fenster-Erstellung, für zukünftige Icon-Anzeige reserviert) |
+| `CloseCallback` | function | `function() end` | Wird ausgeführt, sobald der Nutzer das Fenster schließt (X-Button) |
+
+> Die Library räumt beim Start automatisch alte Instanzen mit demselben Namensmuster in `CoreGui` auf (`Library:CleanupInstance`).
+
+---
+
+## Tabs erstellen
+
+```lua
+local Tab, TabFrame, TabContainer = Window:MakeTab({
+    Name        = "Tab 1",
+    Icon        = "rbxassetid://4483345998",
+    PremiumOnly = false,
+})
+```
+
+| Feld | Typ | Beschreibung |
+|---|---|---|
+| `Name` | string | Name des Tabs |
+| `Icon` | string | Asset-ID des Icons links neben dem Namen |
+| `PremiumOnly` | bool | Wenn `true`, wird der Tab-Inhalt durch eine "Unauthorised Access"-Meldung ersetzt und alle `Add...`-Funktionen werden zu No-Ops |
+
+`MakeTab` gibt drei Werte zurück: die Element-Funktionen (`Tab:AddButton`, …), das Tab-Button-Frame und den Container, in dem die Elemente liegen.
+
+---
+
+## Tab-Sections (Trenner)
+
+Rein visuelle Überschrift in der linken Tab-Leiste, um Tabs optisch zu gruppieren (kein Klapp-Verhalten):
+
+```lua
+Window:TabSection("Combat")
+Window:MakeTab({Name = "Aimbot"})
+Window:MakeTab({Name = "Triggerbot"})
+
+Window:TabSection("Visuals")
+Window:MakeTab({Name = "ESP"})
+```
+
+Jeder danach erstellte Tab wird automatisch der zuletzt aufgerufenen Section zugeordnet, bis eine neue Section oder Gruppe begonnen wird.
+
+---
+
+## Tab-Groups (klappbare Gruppen)
+
+Im Gegensatz zu `TabSection` sind Gruppen **klickbar und klappbar**:
+
+```lua
+local Group = Window:MakeTabGroup({
+    Name      = "Misc",
+    Collapsed = false,
+})
+
+Group:MakeTab({Name = "Settings"})
+Group:MakeTab({Name = "Credits"})
+```
+
+| Feld | Typ | Beschreibung |
+|---|---|---|
+| `Name` | string | Titel der Gruppe (wird in Großbuchstaben angezeigt) |
+| `Collapsed` | bool | Startzustand der Gruppe |
+
+Ein Klick auf den Gruppentitel klappt alle enthaltenen Tabs ein/aus.
+
+---
+
+## Sections innerhalb eines Tabs
+
+```lua
+local Section, Holder = Tab:AddSection({Name = "Meine Sektion"})
+Section:AddButton({Name = "Test"})
+```
+
+Erstellt eine Überschrift mit farbigem Strich links, Elemente werden darunter automatisch vertikal gestapelt. Alle `Add...`-Funktionen (Button, Toggle, Slider, …) funktionieren innerhalb einer Section genauso wie direkt im Tab.
+
+---
+
+## Benachrichtigungen
+
+```lua
+Library:MakeNotification({
+    Name    = "Titel!",
+    Content = "Inhalt der Nachricht...",
+    Image   = "rbxassetid://4384403532",
+    Time    = 5,
+})
+```
+
+| Feld | Typ | Standard | Beschreibung |
+|---|---|---|---|
+| `Name` | string | `"Notification"` | Titel |
+| `Content` | string | `"Test"` | Nachrichtentext |
+| `Image` | string | Standard-Icon | Icon links oben |
+| `Time` | number | `15` | Anzeigedauer in Sekunden |
+
+---
+
+## Elemente
+
+### Label
+
+```lua
+local MyLabel = Section:AddLabel("Ein Label")
+MyLabel:Set("Neuer Text")
+```
+
+### Paragraph
+
+```lua
+local MyParagraph = Section:AddParagraph("Titel", "Beschreibungstext, wird automatisch umgebrochen.")
+MyParagraph:Set("Neuer Inhalt")
+```
+
+### Button
+
+```lua
+Section:AddButton({
+    Name        = "Klick mich",
+    Icon        = "rbxassetid://3944703587",
+    Description = "Optionaler Tooltip-Text",
+    Callback    = function() print("geklickt") end,
+})
+```
+
+### Toggle
+
+```lua
+local MyToggle = Section:AddToggle({
+    Name        = "Feature aktivieren",
+    Default     = false,
+    Color       = Color3.fromRGB(150, 150, 165),
+    Flag        = "meinToggle",
+    Save        = true,
+    Description = "Optionaler Tooltip",
+    Callback    = function(Value) print(Value) end,
+})
+MyToggle:Set(true)
+```
+
+### Slider
+
+```lua
+local MySlider = Section:AddSlider({
+    Name        = "Geschwindigkeit",
+    Min         = 0,
+    Max         = 100,
+    Default     = 50,
+    Increment   = 1,
+    ValueName   = "Punkte",
+    Color       = Color3.fromRGB(150, 150, 165),
+    Flag        = "meinSlider",
+    Save        = true,
+    Description = "Optionaler Tooltip",
+    Callback    = function(Value) print(Value) end,
+})
+MySlider:Set(75)
+```
+
+### Dropdown
+
+```lua
+local MyDropdown = Section:AddDropdown({
+    Name        = "Auswahl",
+    Options     = {"Option 1", "Option 2", "Option 3"},
+    Default     = "Option 1",
+    Flag        = "meinDropdown",
+    Save        = true,
+    Description = "Optionaler Tooltip",
+    Callback    = function(Value) print(Value) end,
+})
+
+MyDropdown:Set("Option 2")
+MyDropdown:Refresh({"Neu 1", "Neu 2"}, true) -- true = alte Optionen löschen
+```
+
+Bei mehr als 5 Optionen wird die Liste automatisch scrollbar statt das Dropdown unendlich zu vergrößern.
+
+### Bind (Keybind)
+
+```lua
+local MyBind = Section:AddBind({
+    Name        = "Keybind",
+    Default     = Enum.KeyCode.E,
+    Hold        = false,
+    Flag        = "meinBind",
+    Save        = true,
+    Description = "Optionaler Tooltip",
+    Callback    = function(IsHolding) print("gedrückt") end,
+})
+MyBind:Set(Enum.KeyCode.Q)
+```
+
+> **Neu gegenüber Orion:** Neben der Bind-Box gibt es einen roten **"×"-Reset-Button**, mit dem der Bind sofort auf `Enum.KeyCode.Unknown` zurückgesetzt werden kann.
+
+### Textbox
+
+```lua
+local MyTextbox = Section:AddTextbox({
+    Name          = "Eingabe",
+    Default       = "Standardwert",
+    TextDisappear = true,
+    Flag          = "meineTextbox",
+    Save          = true,
+    Description   = "Optionaler Tooltip",
+    Callback      = function(Value) print(Value) end,
+})
+MyTextbox:Set("Neuer Wert")
+```
+
+### Colorpicker
+
+```lua
+local MyColorpicker = Section:AddColorpicker({
+    Name        = "Farbe",
+    Default     = Color3.fromRGB(255, 0, 0),
+    Flag        = "meineFarbe",
+    Save        = true,
+    Description = "Optionaler Tooltip",
+    Callback    = function(Value) print(Value) end,
+})
+MyColorpicker:Set(Color3.fromRGB(0, 255, 0))
+```
+
+Klick auf die Farbbox klappt einen Hue-/Sättigungs-Bereich zum Auswählen der Farbe aus.
+
+---
+
+## Description / Tooltips
+
+**Neu gegenüber Orion.** Jedes Element akzeptiert ein optionales Feld `Description`. Ist es gesetzt, erscheint neben dem Namen ein kleines **"?"-Icon**; beim Hovern über das Element (oder das "?" selbst) wird ein Tooltip mit dem Beschreibungstext eingeblendet.
+
+```lua
+Section:AddToggle({
+    Name = "Auto-Farm",
+    Description = "Sammelt automatisch Items in der Nähe.",
+    Callback = function() end,
+})
+```
+
+---
+
+## Flags & Config-System
+
+Flags dienen als eindeutige ID eines Elements in der Config-Datei und ermöglichen den Zugriff auf den Wert von überall im Skript:
+
+```lua
+Tab:AddToggle({
+    Name    = "Toggle",
+    Default = true,
+    Save    = true,
+    Flag    = "toggle",
+})
+
+print(Library.Flags["toggle"].Value)
+```
+
+Funktioniert mit: **Toggle, Slider, Dropdown, Bind, Colorpicker.**
+
+Damit Configs funktionieren:
+1. `SaveConfig = true` und `ConfigFile = "name.json"` im `MakeWindow`-Call setzen.
+2. Bei jedem zu speichernden Element `Save = true` und `Flag = "eindeutigerName"` angeben.
+3. Speichern erfolgt automatisch bei jeder Wertänderung (`Library:SaveConfig`), Laden automatisch beim Fenster-Start (`Library:LoadConfig`).
+
+> Zusätzlich zu den Flag-Werten speichert die Config auch `__theme`, `__font` und `__customAccent` (siehe Theme-System).
+
+---
+
+## Theme-System
+
+**Komplett neu gegenüber Orion.** Über den Theme-Button (Regler-Icon in der Titelleiste) öffnet sich ein eingebauter, versteckter "Theme"-Tab mit zwei Sections:
+
+### Presets
+
+Vordefinierte Themes, wählbar per Dropdown:
+`Default, Black, White, Gray, Blue, Purple, Red`
+
+```lua
+Library.SelectedTheme = "Blue"
+```
+
+### Custom Color
+
+Ein Colorpicker generiert aus einer beliebigen Akzentfarbe automatisch ein vollständiges Theme (Hell-/Dunkel-Abstufungen, Text-/Rahmenfarben) via `GenerateThemeFromAccent`. Ein "Reset Custom Color"-Button setzt alles wieder auf `Default` zurück.
+
+Beide Einstellungen werden bei `SaveConfig = true` persistent gespeichert und beim nächsten Start automatisch wiederhergestellt.
+
+---
+
+## Schriftarten (Fonts)
+
+**Neu gegenüber Orion.** Ebenfalls im Theme-Tab, Section "Text": ein Dropdown zur Auswahl der globalen Schriftart, live angewendet auf alle Texte:
+
+```
+FredokaOne, Gotham, GothamMedium, GothamSemibold,
+GothamBold, GothamBlack, SourceSans, SourceSansBold,
+Montserrat, Michroma, Merriweather
+```
+
+```lua
+Library.Font = Enum.Font.Montserrat
+```
+
+Wird ebenfalls über die Config gespeichert (`__font`).
+
+---
+
+## Tabs per Drag & Drop verschieben
+
+**Neu gegenüber Orion.** In der linken Tab-Leiste kann ein Tab per Klick-und-Halten (≈0,25 s) gegriffen und verschoben werden:
+
+- **Auf einen anderen Tab ziehen** → tauscht die Reihenfolge und übernimmt ggf. dessen Gruppen-Zugehörigkeit.
+- **Auf eine Gruppen-Überschrift ziehen** → verschiebt den Tab in diese Gruppe.
+
+Während des Ziehens erscheint ein halbtransparenter "Ghost"-Rahmen mit dem Tab-Namen, der der Maus folgt.
+
+---
+
+## UI-Steuerung (Minimieren / Schließen / Mobile)
+
+- **Minimieren-Button:** schrumpft das Fenster auf die reine Titelleiste; ein erneuter Klick stellt die volle Größe wieder her.
+- **Schließen-Button (X):** blendet das gesamte Fenster aus, zeigt eine Benachrichtigung ("Press Left Control to reopen the interface") und ruft `CloseCallback` auf.
+- **Left Control:** öffnet das Fenster wieder, wenn es über den X-Button geschlossen wurde.
+- **Mobile:** Auf Touch-Geräten erscheint beim Schließen automatisch ein runder "Wieder öffnen"-Button oben in der Bildschirmmitte.
+- **Fenster verschieben:** Klick-und-Ziehen auf der Titelleiste (`DragPoint`) bewegt das gesamte Fenster mit sanfter Tween-Animation.
+
+---
+
+## Unterschiede zur originalen Orion-Doku
+
+| Orion (original) | Dieses Fork |
+|---|---|
+| `ConfigFolder` (Ordner) | `ConfigFile` (direkter Dateiname) |
+| `OrionLib:Init()` am Skriptende erforderlich | Nicht vorhanden — Fenster ist sofort nach `MakeWindow` einsatzbereit |
+| `OrionLib:Destroy()` als öffentliche Funktion | Nicht vorhanden; Aufräumen geschieht automatisch, sobald `Library:IsRunning()` `false` zurückgibt (z. B. beim erneuten Ausführen des Skripts) |
+| Kein Tooltip-System | `Description`-Feld + "?"-Icon bei jedem Element |
+| Kein Theme-System | Presets + Custom-Accent-Farbgenerator |
+| Keine Font-Auswahl | 11 wählbare Schriftarten, live anwendbar |
+| Keine Tab-Gruppen | `TabSection` (statisch) und `MakeTabGroup` (klappbar) |
+| Keine Tab-Sortierung | Drag & Drop zum Umsortieren/Gruppieren von Tabs |
+| Kein Bind-Reset | "×"-Button neben jedem Keybind |
+
+---
+
+*Diese Dokumentation wurde direkt aus dem Quellcode der Library abgeleitet und spiegelt den tatsächlichen Funktionsumfang wider, nicht die ursprüngliche Orion-Version.*
 
